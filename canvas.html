@@ -1,0 +1,130 @@
+<html>
+	<head>
+		<title>brick breaker</title>
+		<script>
+			//代码就写在这里
+			var context;
+			// now let's load the image and draw it on the canvas
+			// set up a  var of the paddle
+			var paddle = new Image();
+			// set it's content(the image file name)
+			paddle.src = "paddle.png";
+
+			var ball = new Image();
+			ball.src = "ball.png";
+			//?
+			var score = 0;
+			var paddleX = 190;
+			var paddleY = 300;
+			var ballX = paddleX + 45;
+			var ballY = paddleY - 10;
+			var speed = 10;
+			var ballSpeedX = 5;
+			var ballSpeedY = 5;
+			// define two vars, left key and right key
+			// watch and learn !!-_-
+			var kKeyCodeLeft = 37;
+			var kKeyCodeUp = 38;
+			var kKeyCodeRight = 39;
+
+			var ballIsFlying = false;
+			// !!!!haha
+			// set up update and draw
+			// see how do we define a function in javascript
+			// it's diff from scheme
+			var update = function() {
+				// let's update the position of paddle here
+				if(keyIsDown) {
+					// do you remember if statement?
+					if(keyEvent.keyCode == kKeyCodeLeft) {
+						if(paddleX - speed >= 0) {
+							paddleX = paddleX - speed;
+						}
+						//left key
+						
+					} else if (keyEvent.keyCode == kKeyCodeRight) {
+						// right key
+						if(paddleX + speed <= 480 - paddle.width){
+							paddleX = paddleX + speed;
+						}
+					} else if(keyEvent.keyCode == kKeyCodeUp) {
+						// fire the BALL!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+						// sorry, so excited
+						// I'm gonna fire it!!!
+						ballIsFlying = true;
+					}
+				}
+				if(ballIsFlying){
+					if(ballX + ballSpeedX > 480 - ball.width) {
+						ballSpeedX = -ballSpeedX;
+					} else if(ballX + ballSpeedX < 0) {
+						ballSpeedX = -ballSpeedX;
+					}
+					if(ballY - ballSpeedY < 0) {
+						ballSpeedY = -ballSpeedY;
+					}
+					if(ballY + 10 == paddleY) {
+						if(ballX >= paddleX && ballX + ball.width <= paddleX + paddle.width) {
+							if(ballSpeedY < 0) {
+								ballSpeedY = -ballSpeedY;
+								score = score + 1;
+								console.log(score);
+							}
+						}
+					}
+					ballX = ballX + ballSpeedX;			
+					ballY = ballY - ballSpeedY;
+				}
+				
+			};
+
+			var drawScore = function(s) {
+				context.fillStyle = '#fff';   
+				context.font = 'italic 30px sans-serif';   
+				context.fillText  ('Score: ' + s, 0, 30);
+			};
+			var draw = function() {
+				// first we clear the entire canvas, remember ?
+				context.clearRect(0, 0, 480, 320);
+				// draw paddle
+				context.drawImage(paddle,
+				 0, 0, paddle.width, paddle.height,
+				 paddleX, 300, paddle.width, paddle.height);
+				context.drawImage(ball, 0, 0, ball.width, ball.height, 
+					ballX, ballY, ball.width, ball.height);
+				drawScore(score);
+			};
+			var keyIsDown = false;
+			//var key_is_down = false;
+			// which one do you prefer? aha.
+			var keyEvent;
+
+			// key event listener
+			document.onkeydown = function(event) {
+				//
+				console.log('key is down');
+				keyIsDown = true;
+				keyEvent = event;
+			};
+			document.onkeyup = function(event) {
+				console.log('key is up');
+				keyIsDown = false;
+			};
+			// this will be called after all elements loaded
+
+
+			window.onload = function() {
+				context = document.getElementById('canvas').getContext('2d');
+				//set up FPS of our game
+				var fps = 20;
+				//var fps=20; this is a bad practice, don't do like this
+
+				setInterval(update, 1000 / fps);
+				setInterval(draw, 1000 / fps);
+			}
+		</script>
+	</head>
+	<body>
+		<canvas id="canvas" width="480" height="320" style="background:black">
+	</body>
+</html>
