@@ -12,8 +12,9 @@
 
 			var ball = new Image();
 			ball.src = "ball.png";
-			//?
-			var score = 0;
+			//?  
+			var score = 100;
+			var scorePerHit = 10;
 			var paddleX = 190;
 			var paddleY = 300;
 			var ballX = paddleX + 45;
@@ -67,7 +68,7 @@
 						if(ballX >= paddleX && ballX + ball.width <= paddleX + paddle.width) {
 							if(ballSpeedY < 0) {
 								ballSpeedY = -ballSpeedY;
-								score = score + 1;
+								score = score + scorePerHit;
 								console.log(score);
 							}
 						}
