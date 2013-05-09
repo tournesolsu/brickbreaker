@@ -103,14 +103,17 @@
 					ballX = ballX + ballSpeedX;			
 					ballY = ballY - ballSpeedY;
 				}
-				if((ballX + ball.width == brickX && ballY < brickY + brick.height && ballY + ball.height > brickY) ||
+				if(! brickIsDead) {
+					if((ballX + ball.width == brickX && ballY < brickY + brick.height && ballY + ball.height > brickY) ||
 					(ballX == brickX + brick.width && ballY < brickY + brick.height && ballY + ball.height > brickY) ||
 					(ballY + ball.height == brickY && ballX + ball.width > brickX && ballX < brickX + brick.width) ||
 					(ballY == brickY + brick.height && ballX + ball.width > brickX && ballX < brickX + brick.width ) ) {
 					brickIsDead = true;
 					ballSpeedX = -ballSpeedX;
 					ballSpeedY = -ballSpeedY;
+					}	
 				}
+				
 			};
 			var drawScore = function(s) {
 				context.fillStyle = '#fff';   
