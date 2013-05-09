@@ -64,6 +64,12 @@
 					if(keyCode == kKeyCodeLeft) {
 						if(paddleX - speed >= 0) {
 							paddleX = paddleX - speed;
+							if(!ballIsFlying) {
+								// you, do it
+								//gpcu!!!!!
+								// right key.
+								ballX = paddleX + 45;
+							}
 						}
 						//left key
 						
@@ -71,6 +77,9 @@
 						// right key
 						if(paddleX + speed <= 480 - paddle.width){
 							paddleX = paddleX + speed;
+							if(!ballIsFlying) {
+								ballX = paddleX + 45;
+							}
 						}
 					} else if(keyCode == kKeyCodeUp) {
 						// fire the BALL!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -81,6 +90,7 @@
 						// reset game
 						resetGame();
 					}
+					//if()
 				}
 				if(ballIsFlying) {
 					if(ballX + ballSpeedX > 480 - ball.width) {
