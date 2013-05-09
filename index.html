@@ -30,7 +30,7 @@
 			var ballSpeedY = 5;
 			// define two vars, left key and right key
 			// watch and learn !!-_-
-			var keyEvent;
+			var keyCode;
 			var kKeyCodeEnter = 13;
 			var kKeyCodeLeft = 37;
 			var kKeyCodeUp = 38;
@@ -61,23 +61,23 @@
 				}
 				if(keyIsDown) {
 					// do you remember if statement?
-					if(keyEvent.keyCode == kKeyCodeLeft) {
+					if(keyCode == kKeyCodeLeft) {
 						if(paddleX - speed >= 0) {
 							paddleX = paddleX - speed;
 						}
 						//left key
 						
-					} else if (keyEvent.keyCode == kKeyCodeRight) {
+					} else if (keyCode == kKeyCodeRight) {
 						// right key
 						if(paddleX + speed <= 480 - paddle.width){
 							paddleX = paddleX + speed;
 						}
-					} else if(keyEvent.keyCode == kKeyCodeUp) {
+					} else if(keyCode == kKeyCodeUp) {
 						// fire the BALL!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 						// sorry, so excited
 						// I'm gonna fire it!!!
 						ballIsFlying = true;
-					} else if(keyEvent.keyCode == kKeyCodeEnter) {
+					} else if(keyCode == kKeyCodeEnter) {
 						// reset game
 						resetGame();
 					}
@@ -148,7 +148,7 @@
 				//
 				console.log('key is down');
 				keyIsDown = true;
-				keyEvent = event;
+				keyCode = event.keyCode;
 			};
 			document.onkeyup = function(event) {
 				console.log('key is up');
@@ -156,13 +156,39 @@
 			};
 			// this will be called after all elements loaded
 
+			var onTouchStart = function(event) {
+				// 
+				event.preventDefault();
+				//
+				keyIsDown = true;
+				// multi-touch, get the first point
+				var x = event.touches[0].clientX;
+				var y = event.touches[0].clientY;
+				if(y < 200) {
+					// fire the ball
+					keyCode = kKeyCodeUp;
 
+				} else {
+					if(x < 240) {
+						keyCode = kKeyCodeLeft;
+					} else {
+						keyCode = kKeyCodeRight;
+					}
+				}
+			};
+			var onTouchEnd = function(event) {
+				event.preventDefault();
+				keyIsDown = false;
+			}
 			window.onload = function() {
 				context = document.getElementById('canvas').getContext('2d');
 				//set up FPS of our game
 				var fps = 60;
 				//var fps=20; this is a bad practice, don't do like this
-
+				//add touch event listener here
+				// wait me a while...
+				canvas.addEventListener('touchstart', onTouchStart, false);
+				canvas.addEventListener('touchend', onTouchEnd, false);
 				setInterval(update, 1000 / fps);
 				setInterval(draw, 1000 / fps);
 			}
