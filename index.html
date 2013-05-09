@@ -86,7 +86,7 @@
 						// sorry, so excited
 						// I'm gonna fire it!!!
 						ballIsFlying = true;
-					} else if(keyCode == kKeyCodeEnter) {
+					} else if(gameIsOver && keyCode == kKeyCodeEnter) {
 						// reset game
 						resetGame();
 					}
@@ -115,12 +115,13 @@
 				}
 				if(! brickIsDead) {
 					if((ballX + ball.width == brickX && ballY < brickY + brick.height && ballY + ball.height > brickY) ||
-					(ballX == brickX + brick.width && ballY < brickY + brick.height && ballY + ball.height > brickY) ||
-					(ballY + ball.height == brickY && ballX + ball.width > brickX && ballX < brickX + brick.width) ||
+					(ballX == brickX + brick.width && ballY < brickY + brick.height && ballY + ball.height > brickY)) {
+						brickIsDead = true;
+						ballSpeedX = -ballSpeedX;
+					} else if((ballY + ball.height == brickY && ballX + ball.width > brickX && ballX < brickX + brick.width) ||
 					(ballY == brickY + brick.height && ballX + ball.width > brickX && ballX < brickX + brick.width ) ) {
-					brickIsDead = true;
-					ballSpeedX = -ballSpeedX;
-					ballSpeedY = -ballSpeedY;
+						brickIsDead = true;
+						ballSpeedY = -ballSpeedY;
 					}	
 				}
 				
@@ -180,7 +181,9 @@
 				if(y < 200) {
 					// fire the ball
 					keyCode = kKeyCodeUp;
-
+					if(gameIsOver) {
+						keyCode = kKeyCodeEnter;
+					}
 				} else {
 					if(x < 240) {
 						keyCode = kKeyCodeLeft;
