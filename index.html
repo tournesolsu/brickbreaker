@@ -12,29 +12,53 @@
 
 			var ball = new Image();
 			ball.src = "ball.png";
-			//?  
+			
+			var brick = new Image();
+			brick.src = "brick.png";
+
 			var score = 100;
 			var scorePerHit = 10;
 			var paddleX = 190;
 			var paddleY = 300;
 			var ballX = paddleX + 45;
 			var ballY = paddleY - 10;
+			var brickX = 250;
+			var brickY = 150;
+
 			var speed = 10;
 			var ballSpeedX = 5;
 			var ballSpeedY = 5;
 			// define two vars, left key and right key
 			// watch and learn !!-_-
+			var keyEvent;
+			var kKeyCodeEnter = 13;
 			var kKeyCodeLeft = 37;
 			var kKeyCodeUp = 38;
 			var kKeyCodeRight = 39;
-
+			var keyIsDown = false;
 			var ballIsFlying = false;
-			// !!!!haha
+			var gameIsOver = false;
+			var brickIsDead = false;
+
 			// set up update and draw
 			// see how do we define a function in javascript
 			// it's diff from scheme
+
+			var resetGame = function(){
+				ballIsFlying = false;
+				gameIsOver = false;
+				brickIsDead = false;
+				paddleX = 190;
+				paddleY = 300;
+				ballX = paddleX + 45;
+				ballY = paddleY - 10;
+				score = 100;
+			};
 			var update = function() {
 				// let's update the position of paddle here
+				if(ballY > 320) {
+					gameIsOver = true;
+				}
 				if(keyIsDown) {
 					// do you remember if statement?
 					if(keyEvent.keyCode == kKeyCodeLeft) {
@@ -53,9 +77,12 @@
 						// sorry, so excited
 						// I'm gonna fire it!!!
 						ballIsFlying = true;
+					} else if(keyEvent.keyCode == kKeyCodeEnter) {
+						// reset game
+						resetGame();
 					}
 				}
-				if(ballIsFlying){
+				if(ballIsFlying) {
 					if(ballX + ballSpeedX > 480 - ball.width) {
 						ballSpeedX = -ballSpeedX;
 					} else if(ballX + ballSpeedX < 0) {
@@ -64,8 +91,8 @@
 					if(ballY - ballSpeedY < 0) {
 						ballSpeedY = -ballSpeedY;
 					}
-					if(ballY + 10 == paddleY) {
-						if(ballX >= paddleX && ballX + ball.width <= paddleX + paddle.width) {
+					if(ballY + ball.height == paddleY) {
+						if(ballX + ball.width > paddleX && ballX < paddleX + paddle.width) {
 							if(ballSpeedY < 0) {
 								ballSpeedY = -ballSpeedY;
 								score = score + scorePerHit;
@@ -76,13 +103,24 @@
 					ballX = ballX + ballSpeedX;			
 					ballY = ballY - ballSpeedY;
 				}
-				
+				if((ballX + ball.width == brickX && ballY < brickY + brick.height && ballY + ball.height > brickY) ||
+					(ballX == brickX + brick.width && ballY < brickY + brick.height && ballY + ball.height > brickY) ||
+					(ballY + ball.height == brickY && ballX + ball.width > brickX && ballX < brickX + brick.width) ||
+					(ballY == brickY + brick.height && ballX + ball.width > brickX && ballX < brickX + brick.width ) ) {
+					brickIsDead = true;
+					ballSpeedX = -ballSpeedX;
+					ballSpeedY = -ballSpeedY;
+				}
 			};
-
 			var drawScore = function(s) {
 				context.fillStyle = '#fff';   
-				context.font = 'italic 30px sans-serif';   
-				context.fillText  ('Score: ' + s, 0, 30);
+				context.font = 'italic 30px Courier New';   
+				context.fillText('Score: ' + s, 0, 30);
+			};
+			var gameOver = function(g) {
+				context.fillStyle = '#FF0000';
+				context.font = 'bold 50px sans-serif';
+				context.fillText('Game Over', 130, 130);
 			};
 			var draw = function() {
 				// first we clear the entire canvas, remember ?
@@ -94,11 +132,16 @@
 				context.drawImage(ball, 0, 0, ball.width, ball.height, 
 					ballX, ballY, ball.width, ball.height);
 				drawScore(score);
+				if(gameIsOver) {
+					gameOver();
+				}
+				if(! brickIsDead) {
+				context.drawImage(brick, 0, 0, brick.width, brick.height,
+					brickX, brickY, brick.width, brick.height);
+				}
 			};
-			var keyIsDown = false;
 			//var key_is_down = false;
 			// which one do you prefer? aha.
-			var keyEvent;
 
 			// key event listener
 			document.onkeydown = function(event) {
@@ -117,7 +160,7 @@
 			window.onload = function() {
 				context = document.getElementById('canvas').getContext('2d');
 				//set up FPS of our game
-				var fps = 20;
+				var fps = 60;
 				//var fps=20; this is a bad practice, don't do like this
 
 				setInterval(update, 1000 / fps);
