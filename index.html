@@ -35,11 +35,13 @@
 			var kKeyCodeLeft = 37;
 			var kKeyCodeUp = 38;
 			var kKeyCodeRight = 39;
+			var kKeyCodeSpace = 32;
+
 			var keyIsDown = false;
 			var ballIsFlying = false;
 			var gameIsOver = false;
 			var brickIsDead = false;
-
+			var gameIsPause = false;
 			// set up update and draw
 			// see how do we define a function in javascript
 			// it's diff from scheme
@@ -55,6 +57,7 @@
 				score = 100;
 			};
 			var update = function() {
+				if(!gameIsPause) {
 				// let's update the position of paddle here
 				if(ballY > 320) {
 					gameIsOver = true;
@@ -124,7 +127,7 @@
 						ballSpeedY = -ballSpeedY;
 					}	
 				}
-				
+			}	
 			};
 			var drawScore = function(s) {
 				context.fillStyle = '#fff';   
@@ -166,6 +169,9 @@
 			};
 			document.onkeyup = function(event) {
 				console.log('key is up');
+				if(event.keyCode == kKeyCodeSpace) {
+					gameIsPause = !gameIsPause;
+				}
 				keyIsDown = false;
 			};
 			// this will be called after all elements loaded
