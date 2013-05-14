@@ -1,136 +1,305 @@
 <html>
 	<head>
 		<title>brick breaker</title>
+		<script src="jquery-2.0.0.js"></script>
+		<script src="sound.js"></script>
 		<script>
 			//代码就写在这里
-			var context;
-			// now let's load the image and draw it on the canvas
-			// set up a  var of the paddle
-			var paddle = new Image();
-			// set it's content(the image file name)
-			paddle.src = "paddle.png";
-
-			var ball = new Image();
-			ball.src = "ball.png";
-			
-			var brick = new Image();
-			brick.src = "brick.png";
-
-			var score = 100;
-			var scorePerHit = 10;
-			var paddleX = 190;
-			var paddleY = 300;
-			var ballX = paddleX + 45;
-			var ballY = paddleY - 10;
-			var brickX = 250;
-			var brickY = 150;
-
-			var speed = 10;
-			var ballSpeedX = 5;
-			var ballSpeedY = 5;
 			// define two vars, left key and right key
 			// watch and learn !!-_-
-			var keyCode;
+			// 定义需要用到的常量, 这些常量不会被改变
+			var fps = 60;			// set up FPS of our game		
 			var kKeyCodeEnter = 13;
 			var kKeyCodeLeft = 37;
 			var kKeyCodeUp = 38;
 			var kKeyCodeRight = 39;
 			var kKeyCodeSpace = 32;
+			// 此变量用于画布的引用
+			var context;
+			// 游戏的状态
+			var keyIsDown = false;	// 
+			var gameIsOver = false; //
+			var gameIsPause = false;//
+			// var ballIsFlying = false;	废弃这个变量, 小球的状态由小球自己管理
+			// var brickIsDead = false;		废弃, 砖块的状态由各个砖块自己管理
 
-			var keyIsDown = false;
-			var ballIsFlying = false;
-			var gameIsOver = false;
-			var brickIsDead = false;
-			var gameIsPause = false;
+			// 游戏中的数值
+			var score = 0;		// 分数
+			var scorePerHit = 10;	// 
+			var keyCode;			// 记录当前被按下的按键
+
+			// 废弃这6个变量, 分别由各自自行管理
+			// var ballX = paddleX + 45;
+			// var ballY = paddleY - 10;
+			// var brickX = 250;
+			// var brickY = 150;
+			// var ballSpeedX = 5;
+			// var ballSpeedY = 5;
+
+
 			// set up update and draw
 			// see how do we define a function in javascript
 			// it's diff from scheme
+			// now let's load the image and draw it on the canvas
+			// 
+			// ----------------------------------------
+			// 定义游戏中需要用到的类, 小球和砖块(还应该让paddle也变成一个类)
 
-			var resetGame = function(){
-				ballIsFlying = false;
-				gameIsOver = false;
-				brickIsDead = false;
-				paddleX = 190;
-				paddleY = 300;
-				ballX = paddleX + 45;
-				ballY = paddleY - 10;
-				score = 100;
-				ballSpeedX = 5;
-				ballSpeedY = 5;
-			};
-			var update = function() {
-				if(!gameIsPause) {
-				// let's update the position of paddle here
-				if(ballY > 320) {
-					gameIsOver = true;
+			var Paddle = {
+				createNew: function(){
+					var paddle = {};			
+					paddle.x = 190;		//
+					paddle.y = 300;		//
+					paddle.speed = 10;			// paddle的速度 名字取得不好
+					paddle.image = new Image();
+					paddle.image.src = "paddle.png";
+					paddle.image.onload = function() {
+						paddle.width = paddle.image.width;
+						paddle.height = paddle.image.height;
+					};
+                    paddle.draw = function() {
+						context.drawImage(paddle.image, paddle.x, paddle.y);
+                    };
+                    return paddle;
 				}
+			};
+			var Ball = {
+				createNew: function() {
+					var ball = {};
+					// Ball的属性
+					ball.isFlying = false;
+					ball.x = 10;
+					ball.y = 300;
+					ball.speedX = 5;
+					ball.speedY = -5;
+					var image = new Image();
+					image.src = "ball.png";
+					image.onload = function() {
+						ball.width = ball.image.width;
+						ball.height = ball.image.height;
+					};
+					ball.image = image;
+                    // Ball的方法
+                    ball.init = function() {
+                    	ball.speedX = 5;
+                    	ball.speedY = 5;
+                    };
+                    ball.update = function() {
+                    	// 小球在运动的时候才更新坐标
+						if(ball.isFlying) {
+							// x速度改变方向
+							if(ball.x <= 0 || ball.x >= 480 - ball.width) {
+								ball.speedX = -ball.speedX;
+								Sound.play('hit 3.m4a');
+							}
+							// y到顶部的时候改变y的速度方向
+							if(ball.y <= 0) {
+								ball.speedY = -ball.speedY;
+								Sound.play('hit 3.m4a');
+							} else if(ball.y + ball.height >= paddle.y) {
+								// 小球撞到paddle的时候改变小球方向
+								if(ball.x + ball.width > paddle.x && ball.x < paddle.x + paddle.width) {
+									ball.speedY = -ball.speedY;
+									score = score + scorePerHit;
+									Sound.play('hit cyber.m4a');
+								}
+							}
+							ball.x += ball.speedX;	// 等价于 ball.x = ball.x + ball.speedX;
+							ball.y += ball.speedY;
+						}
+                    };
+                    ball.draw = function() {
+						context.drawImage(ball.image, ball.x, ball.y);
+                    };
+                    return ball;
+				}
+			};
+			var Brick = {
+				createNew: function(){
+					var brick = {};
+					// Brick类的属性
+					brick.isAlive = true;
+					brick.image = new Image();
+					brick.image.src = "brick.png";
+					brick.x = 0;
+					brick.y = 0;
+					brick.image.onload = function() {				
+						brick.width = brick.image.width;
+						brick.height = brick.image.height;
+					};
+					// Brick类的方法
+					brick.update = function() {
+						// brick是不会动的, 所以这个函数留空在这里吧
+						// 碰撞检测我们到去
+					};
+					brick.draw = function() {
+						if(brick.isAlive) {
+							// context.drawImage(brick.image, 0, 0, brick.image.width, brick.image.height,
+								// brick.x, brick.y, brick.image.width, brick.image.height);
+							context.drawImage(brick.image, brick.x, brick.y);
+						}
+					};
+					return brick;
+				}
+			};
+			// ----------------------------------------
+			// 创建游戏中要用到的ball和bricks和paddle
+			// 
+			var ball = Ball.createNew();
+			var paddle = Paddle.createNew();
+			var brickList = [];
+			// 创建了5个砖块放到brickList这个表里
+			for(var i = 0; i < 5; i++) {
+				var b = Brick.createNew();
+				b.x = 30 + 70*i;
+				b.y = 30;
+				brickList.push(b);
+			}
+			// 可以双层循环来创建二维排列的砖块
+			for(var i = 0; i < 5; i++) {
+				for(var j = 0; j < 3; j++) {
+					var b = Brick.createNew();
+					b.x = 30 + 70*i;
+					b.y = 30 + 30*j;
+					brickList.push(b);
+				}
+			}			
+			//
+			// ----------------------------------------
+			// 初始化游戏
+			var initGame = function() {
+				gameIsOver = false;
+				gameIsPause = false;
+				score = 0;
+
+				paddle.x = 190;
+				paddle.y = 300;
+
+				ball.isFlying = false;
+				ball.x = paddle.x + 45;
+				ball.y = paddle.y - 10;
+				ball.init();	// 用于重置ball的速度
+				// forEach是列表的内置方法, 列表里面的所有元素都会执行一次写好的函数, 此处函数只有一句话即为 brick.isAlive = true;
+				brickList.forEach(function(brick) {
+					brick.isAlive = true;
+				});
+
+			};
+			// 调用initGame来初始化游戏
+			initGame();
+			// ----------------------------------------
+			// 重置游戏		
+			var resetGame = function() {
+				initGame();
+				// ballIsFlying = false;
+				// ball.isFlying = false;
+				// gameIsOver = false;
+				// brickIsDead = false;
+				// paddleX = 190;
+				// paddleY = 300;
+				// ballX = paddleX + 45;
+				// ballY = paddleY - 10;
+				// score = 100;
+				// ballSpeedX = 5;
+				// ballSpeedY = 5;
+			};
+			// ----------------------------------------
+			// 碰撞检测函数				
+			var handleCollisions = function() {
+				brickList.forEach(function(brick) {
+					if(brick.isAlive && collides(brick, ball)) {
+						brick.isAlive = false;
+						Sound.play('bonus.m4a');
+						ball.speedY = -ball.speedY;
+					}
+				});
+			};
+			// 检测2个矩形是否碰撞(相交)
+			var collides = function(a, b) {
+				return a.x + a.width > b.x &&
+						a.x < b.x + b.width &&
+						a.y + a.height > b.y &&
+						a.y < b.y + b.height;
+			};			
+			// ----------------------------------------
+			// update 和 draw			
+			var update = function() {
+				// 更新paddle
 				if(keyIsDown) {
-					// do you remember if statement?
 					if(keyCode == kKeyCodeLeft) {
-						if(paddleX - speed >= 0) {
-							paddleX = paddleX - speed;
-							if(!ballIsFlying) {
-								// you, do it
-								//gpcu!!!!!
-								// right key.
-								ballX = paddleX + 45;
+						if(paddle.x - paddle.speed >= 0) {
+							paddle.x = paddle.x - paddle.speed;
+							if(!ball.isFlying) {
+								ball.x = paddle.x + 45;
 							}
 						}
 						//left key
-						
 					} else if (keyCode == kKeyCodeRight) {
 						// right key
-						if(paddleX + speed <= 480 - paddle.width){
-							paddleX = paddleX + speed;
-							if(!ballIsFlying) {
-								ballX = paddleX + 45;
+						if(paddle.x + paddle.speed <= 480 - paddle.width){
+							paddle.x = paddle.x + paddle.speed;
+							if(!ball.isFlying) {
+								ball.x = paddle.x + 45;
 							}
 						}
 					} else if(keyCode == kKeyCodeUp) {
 						// fire the BALL!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 						// sorry, so excited
 						// I'm gonna fire it!!!
-						ballIsFlying = true;
+						ball.isFlying = true;
 					} else if(gameIsOver && keyCode == kKeyCodeEnter) {
 						// reset game
 						resetGame();
 					}
-					//if()
+				}			
+				// 如果游戏暂停或结束就直接返回函数(return表示)
+				if(gameIsPause || gameIsOver) {
+					return;
 				}
-				if(ballIsFlying) {
-					if(ballX + ballSpeedX > 480 - ball.width) {
-						ballSpeedX = -ballSpeedX;
-					} else if(ballX + ballSpeedX < 0) {
-						ballSpeedX = -ballSpeedX;
-					}
-					if(ballY - ballSpeedY < 0) {
-						ballSpeedY = -ballSpeedY;
-					}
-					if(ballY + ball.height == paddleY) {
-						if(ballX + ball.width > paddleX && ballX < paddleX + paddle.width) {
-							if(ballSpeedY < 0) {
-								ballSpeedY = -ballSpeedY;
-								score = score + scorePerHit;
-								console.log(score);
-							}
-						}
-					}
-					ballX = ballX + ballSpeedX;			
-					ballY = ballY - ballSpeedY;
+				// 游戏结束
+				if(ball.y > 320) {
+					gameIsOver = true;
 				}
-				if(! brickIsDead) {
-					if((ballX + ball.width == brickX && ballY < brickY + brick.height && ballY + ball.height > brickY) ||
-					(ballX == brickX + brick.width && ballY < brickY + brick.height && ballY + ball.height > brickY)) {
-						brickIsDead = true;
-						ballSpeedX = -ballSpeedX;
-					} else if((ballY + ball.height == brickY && ballX + ball.width > brickX && ballX < brickX + brick.width) ||
-					(ballY == brickY + brick.height && ballX + ball.width > brickX && ballX < brickX + brick.width ) ) {
-						brickIsDead = true;
-						ballSpeedY = -ballSpeedY;
-					}	
-				}
-			}	
+				// 更新小球
+				ball.update();
+				// 遍历砖块列表更新砖块
+				brickList.forEach(function(b) {
+					b.update();
+				});
+				// 处理碰撞事件
+				handleCollisions();	
+				// 这段代码是用来判断小球是左右弹开还是上下弹开
+				// if(! brickIsDead) {
+				// 	if((ballX + ball.width == brickX && ballY < brickY + brick.height && ballY + ball.height > brickY) ||
+				// 	(ballX == brickX + brick.width && ballY < brickY + brick.height && ballY + ball.height > brickY)) {
+				// 		brickIsDead = true;
+				// 		ballSpeedX = -ballSpeedX;
+				// 	} else if((ballY + ball.height == brickY && ballX + ball.width > brickX && ballX < brickX + brick.width) ||
+				// 	(ballY == brickY + brick.height && ballX + ball.width > brickX && ballX < brickX + brick.width ) ) {
+				// 		brickIsDead = true;
+				// 		ballSpeedY = -ballSpeedY;
+				// 	}	
+				// }
 			};
+			var draw = function() {
+				// first we clear the entire canvas, remember ?
+				context.clearRect(0, 0, 480, 320);
+				// draw paddle
+				paddle.draw();
+				// draw ball
+				ball.draw();
+				// draw all bricks in brick list
+				brickList.forEach(function(b) {
+					b.draw();
+				});
+				//
+				drawScore(score);
+				if(gameIsOver) {
+					gameOver();
+				}
+			};
+			// ----------------------------------------
+			// 辅助函数, 画分数和'game over'			
 			var drawScore = function(s) {
 				context.fillStyle = '#fff';   
 				context.font = 'italic 30px Courier New';   
@@ -141,43 +310,21 @@
 				context.font = 'bold 50px sans-serif';
 				context.fillText('Game Over', 130, 130);
 			};
-			var draw = function() {
-				// first we clear the entire canvas, remember ?
-				context.clearRect(0, 0, 480, 320);
-				// draw paddle
-				context.drawImage(paddle,
-				 0, 0, paddle.width, paddle.height,
-				 paddleX, 300, paddle.width, paddle.height);
-				context.drawImage(ball, 0, 0, ball.width, ball.height, 
-					ballX, ballY, ball.width, ball.height);
-				drawScore(score);
-				if(gameIsOver) {
-					gameOver();
-				}
-				if(! brickIsDead) {
-				context.drawImage(brick, 0, 0, brick.width, brick.height,
-					brickX, brickY, brick.width, brick.height);
-				}
-			};
-			//var key_is_down = false;
-			// which one do you prefer? aha.
-
+			// ----------------------------------------
+			// 键盘按键和手机触摸事件检测函数
 			// key event listener
 			document.onkeydown = function(event) {
 				//
-				console.log('key is down');
 				keyIsDown = true;
 				keyCode = event.keyCode;
 			};
 			document.onkeyup = function(event) {
-				console.log('key is up');
+				keyIsDown = false;
 				if(event.keyCode == kKeyCodeSpace) {
 					gameIsPause = !gameIsPause;
 				}
-				keyIsDown = false;
 			};
-			// this will be called after all elements loaded
-
+			// 这段代码用来处理触摸屏手机的触摸事件
 			var onTouchStart = function(event) {
 				// 
 				event.preventDefault();
@@ -203,19 +350,17 @@
 			var onTouchEnd = function(event) {
 				event.preventDefault();
 				keyIsDown = false;
-			}
+			};
+			// ----------------------------------------
+			// 网页载入后会调用次函数一次, 初始化画布, 设置事件检测
 			window.onload = function() {
 				context = document.getElementById('canvas').getContext('2d');
-				//set up FPS of our game
-				var fps = 60;
 				//var fps=20; this is a bad practice, don't do like this
-				//add touch event listener here
-				// wait me a while...
 				canvas.addEventListener('touchstart', onTouchStart, false);
 				canvas.addEventListener('touchend', onTouchEnd, false);
 				setInterval(update, 1000 / fps);
 				setInterval(draw, 1000 / fps);
-			}
+			};
 		</script>
 	</head>
 	<body>
