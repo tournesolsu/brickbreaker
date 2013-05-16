@@ -25,6 +25,8 @@
 
 			// 游戏中的数值
 			var score = 0;		// 分数
+			var life = 3;			
+			var level = 1;
 			var scorePerHit = 10;	// 
 			var keyCode;			// 记录当前被按下的按键
 
@@ -46,7 +48,7 @@
 			// 定义游戏中需要用到的类, 小球和砖块(还应该让paddle也变成一个类)
 
 			var Paddle = {
-				createNew: function(){
+				createNew: function() {
 					var paddle = {};			
 					paddle.x = 190;		//
 					paddle.y = 300;		//
@@ -100,7 +102,6 @@
 								// 小球撞到paddle的时候改变小球方向
 								if(ball.x + ball.width > paddle.x && ball.x < paddle.x + paddle.width) {
 									ball.speedY = -ball.speedY;
-									score = score + scorePerHit;
 									Sound.play('hit cyber.m4a');
 								}
 							}
@@ -149,21 +150,46 @@
 			var paddle = Paddle.createNew();
 			var brickList = [];
 			// 创建了5个砖块放到brickList这个表里
-			for(var i = 0; i < 5; i++) {
-				var b = Brick.createNew();
-				b.x = 30 + 70*i;
-				b.y = 30;
-				brickList.push(b);
-			}
-			// 可以双层循环来创建二维排列的砖块
-			for(var i = 0; i < 5; i++) {
-				for(var j = 0; j < 3; j++) {
-					var b = Brick.createNew();
-					b.x = 30 + 70*i;
-					b.y = 30 + 30*j;
-					brickList.push(b);
+			var loadLevel = function(l) {
+				brickList = [];
+				if(l == 1) {
+					for(var i = 0; i < 5; i++) {
+						var b = Brick.createNew();
+						b.x = 30 + 70*i;
+						b.y = 30;
+						brickList.push(b);
+					}				
+				} else if(l == 2) {
+					for(var i = 0; i < 5; i++) {
+						for(var j = 0; j < 3; j++) {
+							var b = Brick.createNew();
+							b.x = 30 + 70*i;
+							b.y = 30 + 30*j;
+							brickList.push(b);
+						}
+					}
 				}
-			}			
+			};
+			var numberOfAliveBricks = function() {
+				var count = 0;
+				brickList.forEach(function(brick) {
+					if(brick.isAlive) {
+						count += 1;
+					}
+				});
+				return count;
+			}
+
+			loadLevel(level);
+			// // 可以双层循环来创建二维排列的砖块
+			// for(var i = 0; i < 5; i++) {
+			// 	for(var j = 0; j < 3; j++) {
+			// 		var b = Brick.createNew();
+			// 		b.x = 30 + 70*i;
+			// 		b.y = 30 + 30*j;
+			// 		brickList.push(b);
+			// 	}
+			// }			
 			//
 			// ----------------------------------------
 			// 初始化游戏
@@ -171,7 +197,7 @@
 				gameIsOver = false;
 				gameIsPause = false;
 				score = 0;
-
+				life = 3;
 				paddle.x = 190;
 				paddle.y = 300;
 
@@ -183,7 +209,6 @@
 				brickList.forEach(function(brick) {
 					brick.isAlive = true;
 				});
-
 			};
 			// 调用initGame来初始化游戏
 			initGame();
@@ -210,7 +235,15 @@
 					if(brick.isAlive && collides(brick, ball)) {
 						brick.isAlive = false;
 						Sound.play('bonus.m4a');
+						score = score + scorePerHit;
 						ball.speedY = -ball.speedY;
+						// 检查是否所有砖块都没了, 如果是就重置游戏并载入下一关
+
+						if(numberOfAliveBricks() == 0) {
+							resetGame();
+							level += 1;
+							loadLevel(level);
+						}
 					}
 				});
 			};
@@ -258,6 +291,14 @@
 				}
 				// 游戏结束
 				if(ball.y > 320) {
+					console.log('life, ' + life);
+					life = life - 1;
+					ball.isFlying = false;
+					ball.x = paddle.x + 45;
+					ball.y = paddle.y - 10;
+					ball.init();
+				}
+				if(life == 0) {
 					gameIsOver = true;
 				}
 				// 更新小球
@@ -296,19 +337,25 @@
 				drawScore(score);
 				if(gameIsOver) {
 					gameOver();
-				}
+				};
+				remainingLives(life);
 			};
 			// ----------------------------------------
 			// 辅助函数, 画分数和'game over'			
 			var drawScore = function(s) {
-				context.fillStyle = '#fff';   
-				context.font = 'italic 30px Courier New';   
+				context.fillStyle = '#ffff00';   
+				context.font = '30px Comic Sans MS';   
 				context.fillText('Score: ' + s, 0, 30);
 			};
+			var remainingLives = function(l) {
+				context.fillStyle = '#ffff00';
+				context.font = '30px Comic Sans MS';
+				context.fillText('Life: ' + l, 200, 30);
+			}
 			var gameOver = function(g) { 
-				context.fillStyle = '#FF0000';
-				context.font = 'bold 50px sans-serif';
-				context.fillText('Game Over', 130, 130);
+				context.fillStyle = '#FF0065';
+				context.font = '50px Comic Sans MS';
+				context.fillText('Game Over', 110, 160);
 			};
 			// ----------------------------------------
 			// 键盘按键和手机触摸事件检测函数
